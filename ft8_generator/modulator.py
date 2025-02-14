@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy as sci
 import math
+import ft8_generator.encoder as encoder
 from numpy.typing import NDArray
 from ft8_generator.encoder import FT8_SYMBOL_NUM
 
@@ -72,3 +73,11 @@ def ft8_modulation_waveform_generator(gfsk_waveform: NDArray[np.float64],fs: flo
         ft8_waveform[FT8_SYMBOL_NUM * sample_per_symbol - i - 1] *= 0.5 * (1 + np.cos(8 * np.pi * i / sample_per_symbol))
 
     return ft8_waveform
+
+def ft8_generator(payload: NDArray[np.uint8],fs: float,f0: float) -> NDArray[np.complex128]:
+    """
+    Generate the waveform for FT8.  
+    """
+    itones = encoder.ft8_encode(payload)
+    gfsk_waveform = gfsk_modulation_waveform_generator(itones,fs)
+    return ft8_modulation_waveform_generator(gfsk_waveform,fs,f0)
