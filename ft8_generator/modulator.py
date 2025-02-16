@@ -64,7 +64,7 @@ def ft8_modulation_waveform_generator(gfsk_waveform: NDArray[np.float64],fs: flo
     ft8_waveform = np.zeros(FT8_SYMBOL_NUM * sample_per_symbol, dtype=np.complex128)
 
     for i in range(FT8_SYMBOL_NUM * sample_per_symbol):
-        ft8_waveform[i] = np.exp(1j * phi)
+        ft8_waveform[i] = np.sin(phi) - 1j*np.cos(phi)
         phi = math.fmod(phi + dphi[i], 2 * np.pi)
 
     nramp = sample_per_symbol // 8
@@ -74,10 +74,17 @@ def ft8_modulation_waveform_generator(gfsk_waveform: NDArray[np.float64],fs: flo
 
     return ft8_waveform
 
-def ft8_generator(payload: NDArray[np.uint8],fs: float,f0: float) -> NDArray[np.complex128]:
+def ft8_baseband_generator(payload: NDArray[np.uint8],fs: float,f0: float) -> NDArray[np.complex128]:
     """
-    Generate the waveform for FT8.  
+    Generate the baseband waveform for FT8.  
     """
     itones = encoder.ft8_encode(payload)
     gfsk_waveform = gfsk_modulation_waveform_generator(itones,fs)
     return ft8_modulation_waveform_generator(gfsk_waveform,fs,f0)
+
+def ft8_generator(payload: NDArray[np.uint8],fs: float,f0: float,fc: float) -> NDArray[np.float64]:
+    """
+    Generate the waveform for FT8.  
+    """
+    ft8_baseband = ft8_baseband_generator(payload,fs,f0)
+    return np.real(ft8_baseband*np.exp(1j*2*np.pi*fc*np.arange(len(ft8_baseband))/fs))
